@@ -1,13 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import PostCard from '@/components/PostCard';
 import Navigation from '@/components/Navigation';
+import SearchBar from '@/components/SearchBar';
+import PostSkeleton from '@/components/PostSkeleton';
 import { Plus, TrendingUp, Users, Sparkles } from 'lucide-react';
 
 const Feed = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
+
+  // Simulate loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const posts = [
     {
@@ -69,6 +81,13 @@ const Feed = () => {
     }
   ];
 
+  // Filter posts based on search query
+  const filteredPosts = posts.filter(post => 
+    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.author.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.author.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleCreatePost = () => {
     if (newPost.trim()) {
       console.log('Creating post:', newPost);
@@ -81,6 +100,14 @@ const Feed = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Search Bar */}
+        <div className="mb-8 flex justify-center">
+          <SearchBar 
+            onSearch={setSearchQuery} 
+            placeholder="Search posts, users, or hashtags..."
+          />
+        </div>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <Card className="shadow-card hover-lift transition-smooth">
@@ -150,19 +177,34 @@ const Feed = () => {
 
         {/* Feed */}
         <div className="space-y-6">
-          {posts.map((post, index) => (
-            <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-              <PostCard {...post} />
+          {isLoading ? (
+            // Show skeletons while loading
+            Array.from({ length: 5 }).map((_, index) => (
+              <PostSkeleton key={index} />
+            ))
+          ) : filteredPosts.length > 0 ? (
+            filteredPosts.map((post, index) => (
+              <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <PostCard {...post} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No posts found matching your search.' : 'No posts available.'}
+              </p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Load More */}
-        <div className="text-center mt-8">
-          <Button variant="outline" className="hover-lift">
-            Load More Posts
-          </Button>
-        </div>
+        {!isLoading && filteredPosts.length > 0 && (
+          <div className="text-center mt-8">
+            <Button variant="outline" className="hover-lift">
+              Load More Posts
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
