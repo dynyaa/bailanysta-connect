@@ -4,27 +4,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Post } from '@/lib/supabase';
+import { usePosts } from '@/hooks/usePosts';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDistanceToNow } from 'date-fns';
+import CommentsModal from '@/components/CommentsModal';
 
 interface PostCardProps {
-  author: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  isLiked?: boolean;
+  post: Post;
 }
 
-const PostCard = ({ author, content, timestamp, likes, comments, isLiked = false }: PostCardProps) => {
-  const [liked, setLiked] = useState(isLiked);
-  const [likeCount, setLikeCount] = useState(likes);
+const PostCard = ({ post }: PostCardProps) => {
+  const { user } = useAuth();
+  const { likePost } = usePosts();
+  const [commentsModalOpen, setCommentsModalOpen] = useState(false);
 
   const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    if (!user) return;
+    likePost(post.id);
   };
 
   return (
@@ -33,18 +30,20 @@ const PostCard = ({ author, content, timestamp, likes, comments, isLiked = false
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={author.avatar} alt={author.name} />
+              <AvatarImage src={post.profiles.avatar_url} alt={post.profiles.full_name} />
               <AvatarFallback className="gradient-primary text-white">
-                {author.name.charAt(0)}
+                {post.profiles.full_name?.charAt(0) || post.profiles.username.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold text-sm">{author.name}</h3>
-              <p className="text-muted-foreground text-xs">@{author.username}</p>
+              <h3 className="font-semibold text-sm">{post.profiles.full_name}</h3>
+              <p className="text-muted-foreground text-xs">@{post.profiles.username}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-muted-foreground text-xs">{timestamp}</span>
+            <span className="text-muted-foreground text-xs">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </span>
             <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
@@ -53,7 +52,7 @@ const PostCard = ({ author, content, timestamp, likes, comments, isLiked = false
       </CardHeader>
 
       <CardContent className="pt-0">
-        <p className="text-foreground leading-relaxed">{content}</p>
+        <p className="text-foreground leading-relaxed">{post.content}</p>
       </CardContent>
 
       <CardFooter className="pt-3">
@@ -63,18 +62,21 @@ const PostCard = ({ author, content, timestamp, likes, comments, isLiked = false
               variant="ghost"
               size="sm"
               onClick={handleLike}
-              className={cn(
-                "flex items-center space-x-2 hover-glow transition-smooth",
-                liked && "text-red-500"
-              )}
+              disabled={!user}
+              className="flex items-center space-x-2 hover-glow transition-smooth"
             >
-              <Heart className={cn("w-4 h-4", liked && "fill-current")} />
-              <span className="text-sm">{likeCount}</span>
+              <Heart className="w-4 h-4" />
+              <span className="text-sm">{post.likes_count}</span>
             </Button>
 
-            <Button variant="ghost" size="sm" className="flex items-center space-x-2 hover-glow">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCommentsModalOpen(true)}
+              className="flex items-center space-x-2 hover-glow"
+            >
               <MessageCircle className="w-4 h-4" />
-              <span className="text-sm">{comments}</span>
+              <span className="text-sm">{post.comments_count}</span>
             </Button>
 
             <Button variant="ghost" size="sm" className="hover-glow">
@@ -83,6 +85,13 @@ const PostCard = ({ author, content, timestamp, likes, comments, isLiked = false
           </div>
         </div>
       </CardFooter>
+      
+      <CommentsModal 
+        open={commentsModalOpen} 
+        onOpenChange={setCommentsModalOpen}
+        postId={post.id}
+        postAuthor={post.profiles.full_name || post.profiles.username}
+      />
     </Card>
   );
 };

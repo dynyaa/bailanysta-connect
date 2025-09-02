@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Navigation from '@/components/Navigation';
-import PostCard from '@/components/PostCard';
+import PostCardMock from '@/components/PostCardMock';
 import { ArrowRight, Users, Heart, Zap, Star, Play, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import heroImage from '@/assets/bailanysta-hero.jpg';
@@ -155,7 +155,7 @@ const Index = () => {
           <div className="space-y-6">
             {featuredPosts.map((post, index) => (
               <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
-                <PostCard {...post} />
+                <PostCardMock {...post} />
               </div>
             ))}
           </div>

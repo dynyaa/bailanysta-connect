@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import PostCard from '@/components/PostCard';
+import PostCardMock from '@/components/PostCardMock';
 import Navigation from '@/components/Navigation';
 import { Camera, Edit, MapPin, Calendar, Link as LinkIcon, Users, Heart } from 'lucide-react';
 
@@ -175,7 +175,7 @@ const Profile = () => {
           <TabsContent value="posts" className="mt-6">
             <div className="space-y-6">
               {userPosts.map((post, index) => (
-                <PostCard key={index} {...post} />
+                <PostCardMock key={index} {...post} />
               ))}
             </div>
           </TabsContent>
